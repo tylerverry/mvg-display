@@ -1,0 +1,72 @@
+
+=== MVG DIRECT DEBUG OUTPUT ===
+
+===== SYSTEM INFORMATION =====
+Python version: 3.11.11 (main, Dec  6 2024, 11:34:18) [GCC 12.2.1 20220924]
+Platform: Linux-6.1.0-31-amd64-x86_64-with
+Current directory: /app
+Directory contents: ['LICENSE', 'test-log.txt', 'data', '.env.example', '.gitignore', 'ROADMAP.md', 'diagnose-paths.sh', 'package.json', 'docker-compose.yml', '.dockerignore', 'server.js', 'Dockerfile', 'test-bridge.sh', 'public', 'node_modules', 'direct-test.sh', '.github', 'requirements.txt', 'mvg_api.md', 'utils']
+Current user: node
+Environment variables: {'npm_config_user_agent': 'npm/8.19.4 node/v16.20.2 linux x64 workspaces/false', 'NODE_VERSION': '16.20.2', 'HOSTNAME': '79a8a4c31310', 'YARN_VERSION': '1.22.19', 'npm_node_execpath': '/usr/local/bin/node', 'SHLVL': '2', 'npm_config_noproxy': '', 'PORT': '3000', 'HOME': '/root', 'npm_package_json': '/app/package.json', 'PYTHONUNBUFFERED': '1', 'npm_config_userconfig': '/root/.npmrc', 'npm_config_local_prefix': '/app', 'COLOR': '0', 'npm_config_metrics_registry': 'https://registry.npmjs.org/', 'npm_config_prefix': '/usr/local', 'npm_config_cache': '/root/.npm', 'npm_config_node_gyp': '/usr/local/lib/node_modules/npm/node_modules/node-gyp/bin/node-gyp.js', 'PATH': '/app/node_modules/.bin:/node_modules/.bin:/usr/local/lib/node_modules/npm/node_modules/@npmcli/run-script/lib/node-gyp-bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin', 'NODE': '/usr/local/bin/node', 'npm_package_name': 'mvg-display', 'DEFAULT_STATION_ID': 'de:09162:6', 'npm_lifecycle_script': 'node server.js', 'npm_package_version': '0.1.0', 'npm_lifecycle_event': 'start', 'npm_config_globalconfig': '/usr/local/etc/npmrc', 'npm_config_init_module': '/root/.npm-init.js', 'PWD': '/app', 'npm_execpath': '/usr/local/lib/node_modules/npm/bin/npm-cli.js', 'npm_config_global_prefix': '/usr/local', 'npm_command': 'start', 'INIT_CWD': '/app', 'EDITOR': 'vi'}
+=============================
+
+===== IMPORT TEST =====
+‚úÖ Successfully imported MvgApi class
+======================
+
+===== TESTING API CALL WITH STATION ID: de:09162:6 =====
+1. Creating API instance...
+‚úÖ API instance created
+2. Fetching departures...
+‚úÖ Received 10 departures
+
+3. First departure data:
+{
+  "time": 1741796219,
+  "planned": 1741796220,
+  "line": "19",
+  "destination": "Berg am Laim Bf.",
+  "type": "Tram",
+  "icon": "mdi:tram",
+  "cancelled": false,
+  "messages": []
+}
+
+Available fields: time, planned, line, destination, type, icon, cancelled, messages
+
+4. Raw departures array (first 3 items):
+[
+  {
+    "time": 1741796219,
+    "planned": 1741796220,
+    "line": "19",
+    "destination": "Berg am Laim Bf.",
+    "type": "Tram",
+    "icon": "mdi:tram",
+    "cancelled": false,
+    "messages": []
+  },
+  {
+    "time": 1741796280,
+    "planned": 1741795980,
+    "line": "S8",
+    "destination": "Flughafen M√ºnchen",
+    "type": "S-Bahn",
+    "icon": "mdi:subway-variant",
+    "cancelled": false,
+    "messages": []
+  },
+  {
+    "time": 1741796280,
+    "planned": 1741796280,
+    "line": "16",
+    "destination": "Romanplatz",
+    "type": "Tram",
+    "icon": "mdi:tram",
+    "cancelled": false,
+    "messages": []
+  }
+]
+===============================================
+
+=== DEBUG PROCESS COMPLETE ===

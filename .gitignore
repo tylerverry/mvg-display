@@ -1,0 +1,40 @@
+# Node.js dependencies
+node_modules/
+npm-debug.log
+yarn-error.log
+yarn-debug.log
+
+# Python dependencies
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+env/
+.env
+
+# Build files
+/dist
+/build
+/frontend/build
+
+# Development environment
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Log files
+logs/
+*.log
+
+# Cache files
+.cache/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Keep example file
+!.env.example

@@ -1,0 +1,19 @@
+services:
+  mvg-display:
+    container_name: mvg-display
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./:/app
+      - /app/node_modules  # This prevents overwriting container's node_modules
+    environment:
+      - PORT=3000
+      - DEFAULT_STATION_ID=de:09162:6
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
