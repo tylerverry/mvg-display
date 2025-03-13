@@ -93,14 +93,31 @@ body {
 }
 
 .departure-card {
-  display: grid;
-  grid-template-columns: 60px 1fr 60px;
+  display: flex;
   align-items: center;
-  padding: 0.5rem;
-  border-radius: 4px;
-  background: var(--card-bg);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  border: 1px solid #eee;
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+}
+
+.icon-box {
+  flex: 0 0 40px;
+  text-align: center;
+  margin-right: 10px;
+}
+
+.line-box {
+  flex: 0 0 50px;
+  font-weight: bold;
+  margin-right: 10px;
+}
+
+.destination {
+  flex: 1;
+}
+
+.minutes {
+  flex: 0 0 50px;
+  text-align: right;
 }
 
 .line-box {

@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MVG Display Debug</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f0f0f0;
+      margin: 0;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      padding: 20px;
+      overflow: hidden;
+    }
+    
+    h1 {
+      margin-top: 0;
+      color: #0072b5;
+      border-bottom: 2px solid #0072b5;
+      padding-bottom: 10px;
+    }
+    
+    .debug-controls {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      background: #f9f9f9;
+      padding: 15px;
+      border-radius: 8px;
+      align-items: center;
+    }
+    
+    input {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+    
+    button {
+      padding: 10px 20px;
+      background: #0072b5;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+    
+    button:hover {
+      background: #005a92;
+    }
+    
+    .error {
+      color: #d32f2f;
+      background: #ffebee;
+      padding: 10px;
+      border-radius: 4px;
+      margin-bottom: 10px;
+      border-left: 4px solid #d32f2f;
+    }
+    
+    pre {
+      background: #f5f5f5;
+      padding: 15px;
+      border-radius: 4px;
+      overflow-x: auto;
+      margin: 0;
+      font-family: monospace;
+    }
+    
+    .panel {
+      margin-bottom: 20px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    
+    .panel-header {
+      background: #f5f5f5;
+      padding: 10px 15px;
+      font-weight: 500;
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px solid #ddd;
+    }
+    
+    .panel-body {
+      padding: 0;
+    }
+    
+    .badge {
+      background: #0072b5;
+      color: white;
+      border-radius: 50px;
+      padding: 2px 8px;
+      font-size: 0.8em;
+    }
+    
+    .api-status {
+      font-weight: 500;
+      padding: 10px 15px;
+      border-radius: 4px;
+      margin-top: 10px;
+      background: #f0f8ff;
+      border-left: 4px solid #0072b5;
+    }
+    
+    .departure-raw {
+      margin-top: 10px;
+      padding: 10px;
+      background: #f9f9f9;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>MVG Display Debug</h1>
+    
+    <div class="debug-controls">
+      <input type="text" id="station-id" placeholder="Enter Station ID" value="de:09162:6">
+      <button id="fetch-button">Fetch Data</button>
+      <button id="back-button" onclick="window.location.href='/'">Back to App</button>
+    </div>
+    
+    <div id="status" class="api-status">Ready to fetch data</div>
+    
+    <div class="panel">
+      <div class="panel-header">
+        Raw API Response <span id="raw-count" class="badge">0</span>
+      </div>
+      <div class="panel-body">
+        <pre id="raw-data">// Fetch data to see results</pre>
+      </div>
+    </div>
+    
+    <div class="panel">
+      <div class="panel-header">
+        Transformed Departures <span id="transformed-count" class="badge">0</span>
+      </div>
+      <div class="panel-body">
+        <pre id="transformed-data">// Fetch data to see results</pre>
+      </div>
+    </div>
+    
+    <div class="panel">
+      <div class="panel-header">Direction 1 <span id="direction1-count" class="badge">0</span></div>
+      <div class="panel-body">
+        <pre id="direction1-data">// Fetch data to see results</pre>
+      </div>
+    </div>
+    
+    <div class="panel">
+      <div class="panel-header">Direction 2 <span id="direction2-count" class="badge">0</span></div>
+      <div class="panel-body">
+        <pre id="direction2-data">// Fetch data to see results</pre>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // Elements
+    const stationIdInput = document.getElementById('station-id');
+    const fetchButton = document.getElementById('fetch-button');
+    const statusDiv = document.getElementById('status');
+    const rawDataPre = document.getElementById('raw-data');
+    const transformedDataPre = document.getElementById('transformed-data');
+    const direction1DataPre = document.getElementById('direction1-data');
+    const direction2DataPre = document.getElementById('direction2-data');
+    const rawCount = document.getElementById('raw-count');
+    const transformedCount = document.getElementById('transformed-count');
+    const direction1Count = document.getElementById('direction1-count');
+    const direction2Count = document.getElementById('direction2-count');
+    
+    // Fetch departures
+    async function fetchDepartures() {
+      const stationId = stationIdInput.value.trim();
+      
+      if (!stationId) {
+        statusDiv.textContent = 'Please enter a station ID';
+        statusDiv.className = 'api-status error';
+        return;
+      }
+      
+      try {
+        statusDiv.textContent = `Fetching data for station: ${stationId}...`;
+        statusDiv.className = 'api-status';
+        
+        const response = await fetch(`/api/departures/${stationId}`);
+        const data = await response.json();
+        
+        if (data && data.departures) {
+          // Update raw data
+          rawCount.textContent = data.departures.length;
+          rawDataPre.textContent = JSON.stringify(data.departures.slice(0, 5), null, 2);
+          
+          // Create transformed data
+          const transformed = data.departures.map(dep => {
+            const now = Math.floor(Date.now() / 1000);
+            const time = dep.time || dep.planned || now;
+            const minutes = Math.max(0, Math.round((time - now) / 60));
+            
+            return {
+              line: dep.line || dep.label || "?",
+              destination: dep.destination || "Unknown",
+              minutes: minutes,
+              departureTime: new Date(time * 1000).toLocaleTimeString(),
+              isLive: Boolean(dep.realtime)
+            };
+          });
+          
+          transformedCount.textContent = transformed.length;
+          transformedDataPre.textContent = JSON.stringify(transformed.slice(0, 5), null, 2);
+          
+          // For simplicity, just split the results in half for directions
+          const sortedByTime = [...transformed].sort((a, b) => a.minutes - b.minutes);
+          const middle = Math.ceil(sortedByTime.length / 2);
+          const direction1 = sortedByTime.slice(0, middle);
+          const direction2 = sortedByTime.slice(middle);
+          
+          // Update direction data
+          direction1Count.textContent = direction1.length;
+          direction1DataPre.textContent = JSON.stringify(direction1, null, 2);
+          
+          direction2Count.textContent = direction2.length;
+          direction2DataPre.textContent = JSON.stringify(direction2, null, 2);
+          
+          statusDiv.textContent = `Success! Found ${data.departures.length} departures for station ${stationId}`;
+          statusDiv.className = 'api-status';
+        } else {
+          statusDiv.textContent = 'No departures found or invalid response structure';
+          statusDiv.className = 'api-status error';
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        statusDiv.textContent = `Error: ${error.message}`;
+        statusDiv.className = 'api-status error';
+      }
+    }
+    
+    // Event listeners
+    fetchButton.addEventListener('click', fetchDepartures);
+    stationIdInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') fetchDepartures();
+    });
+    
+    // Auto-fetch on load
+    fetchDepartures();
+  </script>
+</body>
+</html>
