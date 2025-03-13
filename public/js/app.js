@@ -44,12 +44,18 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log(`Station set to: ${stationName} (${stationId})`);
   }
   
+  // Track current departures to prevent unnecessary DOM updates
+  let currentDepartures = [];
+
   async function fetchDepartures() {
     console.log(`Fetching departures for station ID: ${stationId}`);
     try {
-      // Show a loading indicator:
-      if (departuresContainer) {
-        departuresContainer.innerHTML = '<div class="placeholder">Loading departures…</div>';
+      // Instead of clearing immediately, just indicate loading state
+      if (departuresContainer && !departuresContainer.querySelector('.placeholder')) {
+        // Mark existing cards as updating instead of removing them
+        document.querySelectorAll('.departure-card').forEach(card => {
+          card.classList.add('updating');
+        });
       }
       
       const transportTypes = settings.filters.transportTypes.join(',');
@@ -77,22 +83,98 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
   
-  // New render function for the single departures feed.
+  // Improved render function that updates DOM intelligently
   function renderDepartures(departures) {
     if (!departuresContainer) {
       console.error('Departures container not found');
       return;
     }
+
     if (!departures || departures.length === 0) {
       console.log('No departures available');
       departuresContainer.innerHTML = '<div class="placeholder">No departures available</div>';
+      currentDepartures = [];
       return;
     }
+
     console.log(`Rendering ${departures.length} departures`);
-    departuresContainer.innerHTML = '';
-    departures.forEach(departure => {
-      departuresContainer.appendChild(createDepartureCard(departure));
-    });
+    
+    // If the container is empty or only has a placeholder, create all cards
+    if (departuresContainer.children.length === 0 || 
+        (departuresContainer.children.length === 1 && departuresContainer.querySelector('.placeholder'))) {
+      departuresContainer.innerHTML = '';
+      departures.forEach(departure => {
+        const card = createDepartureCard(departure);
+        card.classList.add('new'); // Add animation class
+        departuresContainer.appendChild(card);
+      });
+    } else {
+      // Update existing cards where possible, add/remove as needed
+      updateDepartureCards(departures);
+    }
+    
+    // Store current departures for future comparison
+    currentDepartures = [...departures];
+  }
+  
+  // New function to update cards intelligently
+  function updateDepartureCards(newDepartures) {
+    const existingCards = Array.from(departuresContainer.querySelectorAll('.departure-card'));
+    
+    // First pass: update existing cards where possible (by line+destination)
+    for (let i = 0; i < Math.min(existingCards.length, newDepartures.length); i++) {
+      updateCardContent(existingCards[i], newDepartures[i]);
+    }
+    
+    // If we need more cards, add them
+    if (newDepartures.length > existingCards.length) {
+      for (let i = existingCards.length; i < newDepartures.length; i++) {
+        const card = createDepartureCard(newDepartures[i]);
+        card.classList.add('new');
+        departuresContainer.appendChild(card);
+      }
+    }
+    
+    // If we have extra cards, remove them
+    while (departuresContainer.children.length > newDepartures.length) {
+      departuresContainer.removeChild(departuresContainer.lastChild);
+    }
+  }
+  
+  // Helper to update a card's content
+  function updateCardContent(card, departure) {
+    if (!card || !departure) return;
+    
+    const lineBox = card.querySelector('.line-box');
+    const destination = card.querySelector('.destination');
+    const minutes = card.querySelector('.minutes');
+    
+    if (lineBox) lineBox.textContent = departure.line || "?";
+    if (destination) destination.textContent = departure.destination || "Unknown";
+    if (minutes) minutes.textContent = departure.minutes;
+    
+    // Update icon if needed
+    const iconBox = card.querySelector('.icon-box');
+    if (iconBox) {
+      const iconPath = getIconPath(departure.icon, departure.type);
+      const currentImg = iconBox.querySelector('img');
+      
+      if (currentImg) {
+        currentImg.src = iconPath;
+        currentImg.alt = departure.type;
+      } else if (iconPath) {
+        iconBox.innerHTML = `<img src="${iconPath}" alt="${departure.type}" class="departure-icon" onerror="this.onerror=null; this.style.display='none';">`;
+      }
+    }
+    
+    // Remove any updating class and add updated class for a brief highlight
+    card.classList.remove('updating');
+    card.classList.add('updated');
+    
+    // Remove the updated class after animation completes
+    setTimeout(() => {
+      card.classList.remove('updated');
+    }, 1000);
   }
   
   // Updated function to use type directly for icon filenames
