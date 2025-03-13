@@ -95,7 +95,29 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
   
-  // Updated card creator to include the transport icon.
+  // Updated function to use type directly for icon filenames
+  function getIconPath(iconString, departureType) {
+    // If we have a type, convert it to a filename format (lowercase with hyphens)
+    if (departureType) {
+      // Convert "X-Bahn" to "x-bahn.svg"
+      const iconName = departureType.toLowerCase().replace(/\s+/g, '-');
+      console.log(`Using icon based on type: ${departureType} → ${iconName}.svg`);
+      return `/icons/${iconName}.svg`;
+    }
+    
+    // As backup, try iconString with "mdi:" prefix
+    if (iconString && iconString.includes(':')) {
+      const parts = iconString.split(':');
+      const iconName = parts[1] || iconString;
+      console.log(`Using icon from icon string: ${iconName}.svg`);
+      return `/icons/${iconName}.svg`;
+    }
+    
+    console.log('No valid icon information');
+    return ''; // Return empty string instead of default.svg since user doesn't have it
+  }
+  
+  // Updated card creator to pass the correct parameter to getIconPath
   function createDepartureCard(departure) {
     if (!departure || typeof departure !== 'object') {
       console.error('Invalid departure object:', departure);
@@ -109,21 +131,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const minutesDisplay = departure.minutes;  // use the server-computed minutes value
     const destination = departure.destination || "Unknown";
     
-    // Convert icon value from e.g. "mdi:subway" to "mdi mdi-subway"
-    let iconHtml = '';
-    if (departure.icon) {
-      let iconClass = departure.icon;
-      if (iconClass.includes(':')) {
-        iconClass = iconClass.replace(':', ' mdi-');
-        if (!iconClass.startsWith("mdi")) {
-          iconClass = "mdi " + iconClass;
-        }
-      }
-      iconHtml = `<i class="${iconClass} departure-icon"></i>`;
-    }
+    // Get icon path and handle empty path more gracefully
+    const iconPath = getIconPath(departure.icon, departure.type);
+    console.log(`Using icon path: ${iconPath} for departure:`, departure.line);
+    
+    // Create HTML with or without icon depending on whether we have a valid path
+    const iconHtml = iconPath ? 
+      `<div class="icon-box"><img src="${iconPath}" alt="${departure.type}" class="departure-icon" onerror="this.onerror=null; this.style.display='none';"></div>` :
+      `<div class="icon-box"></div>`;
     
     card.innerHTML = `
-      <div class="icon-box">${iconHtml}</div>
+      ${iconHtml}
       <div class="line-box">${lineDisplay}</div>
       <div class="destination">${destination}</div>
       <div class="minutes">${minutesDisplay}</div>

@@ -108,14 +108,16 @@ app.get('/api/departures/:stationId', async (req, res) => {
     const cached = departureCache[stationId];
     
     if (cached && (now - cached.timestamp < CACHE_DURATION)) {
-      // Transform departures in cache before filtering
-      cached.data.departures = cached.data.departures.map(dep => transformDeparture(dep));
+      // FIXED: Don't transform cached data twice
+      console.log('[SERVER] Using cached data for', stationId);
       return res.json(filterByModes(cached.data, modes));
     }
     
     // Fetch fresh data using Python bridge
     const data = await fetchMVGData(stationId);
+    
     // Transform departures so each departure gets a computed "minutes" property.
+    console.log('[SERVER] Transforming', data.departures.length, 'departures');
     data.departures = data.departures.map(dep => transformDeparture(dep));
     
     // Save to cache
@@ -224,17 +226,29 @@ function transformDeparture(dep) {
     
     console.log('[SERVER] Transforming departure:', JSON.stringify(dep).slice(0, 200));
     
+    // FIXED: Check if this is already a transformed departure
+    if (dep.departureTime && typeof dep.minutes === 'number') {
+      console.log('[SERVER] Object already transformed, skipping:', dep.line, 'to', dep.destination);
+      return dep; // Return as-is if already transformed
+    }
+    
     const currentTimeSec = Math.floor(Date.now() / 1000); // current time in seconds
     let timeSec = (dep.realtimeDepartureTime !== undefined && dep.realtimeDepartureTime !== null) 
       ? dep.realtimeDepartureTime 
       : dep.time || dep.planned;
+    
     if (typeof timeSec !== 'number') {
       timeSec = parseInt(timeSec, 10);
     }
+    
+    // FIXED: Only use current time if no valid time is available
     if (isNaN(timeSec) || timeSec === 0) {
       timeSec = currentTimeSec;
     }
+    
+    // DEBUG: Log the calculation values
     const minutesUntil = Math.max(0, Math.floor((timeSec - currentTimeSec) / 60));
+    console.log(`[SERVER] Time calculation: departure=${timeSec}, current=${currentTimeSec}, diff=${timeSec-currentTimeSec}sec, minutes=${minutesUntil}`);
     
     const transformed = {
       line: String(dep.line || dep.label || dep.product || "?"),
@@ -244,7 +258,7 @@ function transformDeparture(dep) {
       delayMinutes: (dep.planned && timeSec > dep.planned) ? Math.round((timeSec - dep.planned) / 60) : 0,
       isLive: Boolean(dep.realtime),
       platform: String(dep.platform || ''),
-      type: String(dep.type || '')   // ...changed code: add type field for filtering...
+      type: String(dep.type || '')   
     };
     
     console.log('[SERVER] Successfully transformed departure:', transformed.line, 'to', transformed.destination, 'with minutes:', transformed.minutes);
@@ -276,7 +290,7 @@ function calculateSimilarity(s1, s2) {
   let matchCount = 0;
   const len = Math.min(s1.length, s2.length);
   for (let i = 0; i < len; i++) {
-    if (s1[i] === s2[i]) {
+    if ( s1[i] === s2[i]) {
       matchCount++;
     } else {
       break;
