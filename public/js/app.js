@@ -1,47 +1,78 @@
 document.addEventListener('DOMContentLoaded', () => {
-  // Constants and state
-  const REFRESH_INTERVAL = 15000; // 15 seconds
+  // Get settings
+  const settings = window.mvgSettings ? window.mvgSettings.config : {
+    station: { id: 'de:09162:6', name: 'Hauptbahnhof' },
+    filters: { transportTypes: ['tram', 'bus', 'ubahn', 'sbahn'], lineNumbers: [] },
+    display: { 
+      language: 'DE',
+      refreshInterval: 15,
+      directionLabels: { direction1: 'Direction 1', direction2: 'Direction 2' }
+    }
+  };
+  
+  // Use settings to define constants and state
+  const REFRESH_INTERVAL = settings.display.refreshInterval * 1000 || 15000;
   let refreshTime = null;
   
   // Elements
-  const stationSearch = document.getElementById('station-search');
-  const searchResults = document.getElementById('search-results');
   const stationNameEl = document.querySelector('.station-name');
   const direction1El = document.getElementById('dep-outward');
   const direction2El = document.getElementById('dep-inward');
+  const direction1Title = document.querySelector('.direction-title:first-of-type');
+  const direction2Title = document.querySelector('.direction-title:last-of-type');
   
-  // Get station ID from localStorage or use default
-  let stationId = localStorage.getItem('selectedStationId') || 'de:09162:6'; // Default to Hauptbahnhof
-  let stationName = localStorage.getItem('selectedStationName') || 'Loading station...';
+  // Set direction labels from settings
+  if (direction1Title) direction1Title.textContent = settings.display.directionLabels.direction1;
+  if (direction2Title) direction2Title.textContent = settings.display.directionLabels.direction2;
+  
+  // Get station info from settings
+  let stationId = settings.station.id;
+  let stationName = settings.station.name;
   
   // Update station name in the UI
   updateStationName();
-
-  // Add event listeners for station search
-  stationSearch.addEventListener('input', debounce(handleStationSearch, 300));
-  searchResults.addEventListener('click', handleStationSelect);
-
-  // Fetch data immediately and then set interval
-  fetchDepartures();
-  setInterval(fetchDepartures, REFRESH_INTERVAL);
   
-  // Update "last updated" time every second
-  setInterval(updateLastUpdated, 1000);
+  // Listen for settings updates
+  window.addEventListener('mvg-settings-updated', (event) => {
+    const newSettings = event.detail.config;
+    
+    // Update station info if changed
+    if (newSettings.station.id !== stationId) {
+      stationId = newSettings.station.id;
+      stationName = newSettings.station.name;
+      updateStationName();
+      fetchDepartures(); // Refresh departures immediately
+    }
+    
+    // Update direction labels
+    if (direction1Title) direction1Title.textContent = newSettings.display.directionLabels.direction1;
+    if (direction2Title) direction2Title.textContent = newSettings.display.directionLabels.direction2;
+  });
   
   // Functions
   function updateStationName() {
-    stationNameEl.textContent = stationName;
+    if (stationNameEl) stationNameEl.textContent = stationName;
+    console.log(`Station set to: ${stationName} (${stationId})`);
   }
   
   async function fetchDepartures() {
+    console.log(`Fetching departures for station ID: ${stationId}`);
     try {
-      // Use the new grouped endpoint
-      const response = await fetch(`/api/departures/${stationId}/grouped`);
-      if (!response.ok) throw new Error(`Error: ${response.status}`);
+      // Build query params with transport types
+      const transportTypes = settings.filters.transportTypes.join(',');
+      const url = `/api/departures/${stationId}/grouped?modes=${transportTypes}`;
+      console.log(`Fetching from URL: ${url}`);
+      
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        console.error(`API error: ${response.status}`);
+        throw new Error(`API error: ${response.status}`);
+      }
       
       const data = await response.json();
+      console.log('Fetched departures data:', data);
       
-      // Update the UI with the two direction groups
       renderDepartureGroup(direction1El, data.direction1);
       renderDepartureGroup(direction2El, data.direction2);
       
@@ -49,23 +80,37 @@ document.addEventListener('DOMContentLoaded', () => {
       updateLastUpdated();
     } catch (error) {
       console.error('Failed to fetch departures:', error);
-      direction1El.innerHTML = '<div class="placeholder">Error loading departures. Will retry soon.</div>';
-      direction2El.innerHTML = '<div class="placeholder">Error loading departures. Will retry soon.</div>';
+      if (direction1El) direction1El.innerHTML = '<div class="placeholder">Error loading departures</div>';
+      if (direction2El) direction2El.innerHTML = '<div class="placeholder">Error loading departures</div>';
     }
   }
   
   function renderDepartureGroup(container, departures) {
-    // Clear container if no departures
+    if (!container) {
+      console.error('Container element not found');
+      return;
+    }
+    
     if (!departures || departures.length === 0) {
       container.innerHTML = '<div class="placeholder">No departures available</div>';
       return;
     }
     
-    // Clear previous content
+    console.log(`Rendering ${departures.length} departures`);
     container.innerHTML = '';
     
-    // Add each departure card
-    departures.forEach(departure => {
+    // Filter departures by line number if set
+    let filteredDepartures = departures;
+    if (settings.filters.lineNumbers && settings.filters.lineNumbers.length > 0) {
+      filteredDepartures = departures.filter(dep => 
+        settings.filters.lineNumbers.includes(dep.line.toString())
+      );
+    }
+    
+    // Show either filtered departures or original if filter yields no results
+    const departuresToShow = filteredDepartures.length > 0 ? filteredDepartures : departures;
+    
+    departuresToShow.forEach(departure => {
       container.appendChild(createDepartureCard(departure));
     });
   }
@@ -74,9 +119,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const card = document.createElement('div');
     card.className = 'departure-card';
     
-    // Add fallback values for both line and minutes
     const lineDisplay = departure.line || "?";
-    const minutesDisplay = departure.minutes === null || departure.minutes === undefined ? "?" : departure.minutes;
+    const minutesDisplay = departure.minutes === null || departure.minutes === undefined 
+                         ? "?" : departure.minutes;
     
     card.innerHTML = `
       <div class="line-box">${lineDisplay}</div>
@@ -93,76 +138,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const secondsAgo = Math.floor((now - refreshTime) / 1000);
     const lastUpdatedEl = document.querySelector('.last-updated');
     
-    lastUpdatedEl.textContent = `Last updated ${secondsAgo} seconds ago`;
-    lastUpdatedEl.classList.toggle('stale', secondsAgo > 45);
-  }
-
-  // Station search and selection
-  async function handleStationSearch() {
-    const query = stationSearch.value.trim();
-    
-    if (query.length < 2) {
-      searchResults.style.display = 'none';
-      return;
-    }
-    
-    try {
-      const response = await fetch(`/api/stations?query=${encodeURIComponent(query)}`);
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to fetch stations');
-      }
-      
-      const stations = await response.json();
-      
-      if (stations.length === 0) {
-        searchResults.innerHTML = '<div class="search-result">No stations found</div>';
-      } else {
-        searchResults.innerHTML = stations
-          .map(station => 
-            `<div class="search-result" data-id="${station.id}" data-name="${station.name}">${station.name}</div>`
-          )
-          .join('');
-      }
-      
-      searchResults.style.display = 'block';
-    } catch (error) {
-      console.error('Error searching stations:', error);
-      searchResults.innerHTML = '<div class="search-result">Error searching stations</div>';
-      searchResults.style.display = 'block';
+    if (lastUpdatedEl) {
+      lastUpdatedEl.textContent = `Last updated ${secondsAgo} seconds ago`;
+      lastUpdatedEl.classList.toggle('stale', secondsAgo > 45);
     }
   }
   
-  function handleStationSelect(e) {
-    if (!e.target.classList.contains('search-result')) return;
-    
-    const id = e.target.dataset.id;
-    const name = e.target.dataset.name;
-    
-    if (!id) return;
-    
-    stationId = id;
-    stationName = name;
-    
-    // Save to localStorage
-    localStorage.setItem('selectedStationId', stationId);
-    localStorage.setItem('selectedStationName', stationName);
-    
-    // Update UI
-    updateStationName();
-    fetchDepartures();
-    
-    // Hide search results
-    searchResults.style.display = 'none';
-    stationSearch.value = '';
-  }
-
-  // Utility function for debouncing
-  function debounce(fn, delay) {
-    let timer;
-    return function(...args) {
-      clearTimeout(timer);
-      timer = setTimeout(() => fn.apply(this, args), delay);
-    }
-  }
+  // Fetch departures immediately and set refresh interval
+  console.log('Initializing MVG Display app...');
+  fetchDepartures();
+  setInterval(fetchDepartures, REFRESH_INTERVAL);
+  
+  // Update last refreshed time every second
+  setInterval(updateLastUpdated, 1000);
 });

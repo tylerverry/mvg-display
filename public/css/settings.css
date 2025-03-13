@@ -1,0 +1,407 @@
+/* Settings Button */
+.settings-button {
+  position: fixed !important; 
+  top: 20px;
+  right: 20px;
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 9999 !important;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.settings-button:hover {
+  background: rgba(255, 255, 255, 0.5);
+  transform: rotate(30deg);
+}
+
+.settings-button svg {
+  width: 24px;
+  height: 24px;
+  fill: white;
+}
+
+/* Modal container */
+.settings-modal-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+/* Modal styling to match the white and blue theme */
+.settings-modal {
+  width: 90%;
+  max-width: 600px;
+  max-height: 80vh;
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  color: #333;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+/* Modal header */
+.settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  background: #0072b5;
+  border-radius: 12px;
+  padding: 15px;
+}
+
+.settings-header h2 {
+  margin: 0;
+  font-size: 1.8rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: white;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+/* Tabs navigation */
+.settings-tabs {
+  display: flex;
+  border-bottom: 1px solid #e0e0e0;
+  margin-bottom: 20px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  background: #f5f5f5;
+  border-radius: 12px;
+  padding: 5px;
+}
+
+.settings-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.tab-button {
+  white-space: nowrap;
+  padding: 12px 20px;
+  background: none;
+  border: none;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+  font-size: 1rem;
+}
+
+.tab-button.active {
+  color: white;
+  background: #0072b5;
+  border-radius: 8px;
+}
+
+/* Content area */
+.settings-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 15px;
+  background: #f9f9f9;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+/* Form elements styling */
+.form-group {
+  margin-bottom: 20px;
+}
+
+label {
+  display: block;
+  margin-bottom: 10px;
+  color: #333;
+  font-weight: 500;
+}
+
+input[type="text"],
+input[type="number"],
+select {
+  width: 100%;
+  padding: 12px;
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  color: #333;
+  font-size: 1rem;
+}
+
+/* Transport type checkboxes */
+.checkbox-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  background: white;
+  padding: 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+  border: 1px solid #ddd;
+  color: #333;
+}
+
+.checkbox-item.active {
+  background: #e6f3fa;
+  border-color: #0072b5;
+}
+
+.checkbox-item input {
+  margin-right: 8px;
+}
+
+/* Footer buttons */
+.settings-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 15px;
+  background: #f5f5f5;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+}
+
+/* Buttons styled to match the blue theme */
+.save-button,
+.cancel-button,
+.line-filter-container button {
+  padding: 12px 20px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.save-button {
+  background: #0072b5;
+  color: white;
+}
+
+.save-button:hover {
+  background: #005a92;
+  transform: translateY(-2px);
+}
+
+.cancel-button {
+  background: #e0e0e0;
+  color: #333;
+}
+
+.cancel-button:hover {
+  background: #ccc;
+}
+
+/* Search results styling */
+.search-results {
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+  margin-top: 8px;
+  display: none;
+}
+
+.search-result-item {
+  padding: 12px;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+  color: #333;
+}
+
+.search-result-item:hover {
+  background: #f0f0f0;
+}
+
+.search-result-item:last-child {
+  border-bottom: none;
+}
+
+.current-station-info {
+  background: #f5f5f5;
+  padding: 15px;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: #333;
+}
+
+.station-id-badge {
+  font-size: 0.8rem;
+  opacity: 0.7;
+  font-family: monospace;
+  color: #666;
+}
+
+/* Line filters & buttons */
+.line-filter-container {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.line-filter-container input {
+  flex: 1;
+}
+
+.line-filter-container button {
+  background: #0072b5;
+  color: white;
+  border-radius: 8px;
+  padding: 8px 16px;
+}
+
+.line-filter-container button:hover {
+  background: #005a92;
+}
+
+/* Available lines styling */
+.available-lines-section {
+  margin-bottom: 20px;
+}
+
+.available-lines-section h4 {
+  margin-bottom: 10px;
+  font-weight: 500;
+  font-size: 1.1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #333;
+}
+
+.available-lines-section .toggle-all {
+  font-size: 0.8rem;
+  cursor: pointer;
+  text-decoration: underline;
+  opacity: 0.8;
+  color: #0072b5;
+}
+
+.available-lines {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+  min-height: 40px;
+}
+
+.available-lines-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  width: 100%;
+  font-style: italic;
+  opacity: 0.7;
+  color: #666;
+}
+
+/* Line filter tags */
+.line-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.line-filter-tag {
+  background: #0072b5;
+  border-radius: 8px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: white;
+}
+
+.line-filter-tag .remove {
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.line-filter-tag .remove:hover {
+  background: rgba(255, 0, 0, 0.3);
+}
+
+.line-filter-tag.available {
+  background: #e0e0e0;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.line-filter-tag.available:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+}
+
+.line-filter-tag.available.selected {
+  background: #0072b5;
+  color: white;
+}
+
+.toggle-switch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.toggle-switch label {
+  margin-bottom: 0;
+  cursor: pointer;
+}

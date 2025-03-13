@@ -5,13 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MVG Display</title>
   <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/settings.css">
 </head>
 <body>
   <div class="container">
-    <div class="station-selection">
-      <input type="text" id="station-search" placeholder="Search for a station...">
-      <div id="search-results"></div>
-    </div>
+    <!-- Removed station selection from here -->
 
     <div class="header">
       <h1 class="station-name">Loading station...</h1>
@@ -31,6 +29,136 @@
     <div class="last-updated"></div>
   </div>
   
+  <div class="settings-button" id="settings-button">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+      <path fill="none" d="M0 0h24v24H0z"/>
+      <path d="M12 1l9.5 5.5v11L12 23l-9.5-5.5v-11L12 1zm0 2.311L4.5 7.653v8.694l7.5 4.342 7.5-4.342V7.653L12 3.311zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm0-2a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/>
+    </svg>
+  </div>
+
+  <!-- Updated settings modal template -->
+  <template id="settings-modal-template">
+    <div class="settings-modal">
+      <div class="settings-header">
+        <h2>Display Settings</h2>
+        <button class="close-button">&times;</button>
+      </div>
+      
+      <div class="settings-tabs">
+        <button class="tab-button active" data-tab="station">Station</button>
+        <button class="tab-button" data-tab="filters">Filters</button>
+        <button class="tab-button" data-tab="display">Display</button>
+      </div>
+      
+      <div class="settings-content">
+        <!-- Station Tab -->
+        <div class="tab-content active" id="station-tab">
+          <div class="form-group">
+            <label for="settings-station-search">Search for a station:</label>
+            <input type="text" id="settings-station-search" placeholder="Type at least 2 characters...">
+            <div id="settings-station-results" class="search-results"></div>
+          </div>
+          
+          <div class="form-group">
+            <label>Current Station:</label>
+            <div class="current-station-info">
+              <span id="current-station-name">No station selected</span>
+              <span id="current-station-id" class="station-id-badge"></span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Filters Tab -->
+        <div class="tab-content" id="filters-tab">
+          <div class="form-group">
+            <label>Transport Types:</label>
+            <div id="transport-types" class="checkbox-group">
+              <div class="checkbox-item" data-value="ubahn">
+                <input type="checkbox" id="type-ubahn">
+                <label for="type-ubahn">U-Bahn</label>
+              </div>
+              <div class="checkbox-item" data-value="sbahn">
+                <input type="checkbox" id="type-sbahn">
+                <label for="type-sbahn">S-Bahn</label>
+              </div>
+              <div class="checkbox-item" data-value="tram">
+                <input type="checkbox" id="type-tram">
+                <label for="type-tram">Tram</label>
+              </div>
+              <div class="checkbox-item" data-value="bus">
+                <input type="checkbox" id="type-bus">
+                <label for="type-bus">Bus</label>
+              </div>
+            </div>
+          </div>
+
+          <!-- The Available Lines section will be inserted here dynamically -->
+          
+          <div class="form-group">
+            <label for="line-filter">Custom Line Filters:</label>
+            <div class="line-filter-container">
+              <input type="text" id="line-filter-input" placeholder="Add a custom line number...">
+              <button id="add-line-filter">Add</button>
+            </div>
+            <div id="active-line-filters" class="line-filters"></div>
+          </div>
+        </div>
+        
+        <!-- Display Tab -->
+        <div class="tab-content" id="display-tab">
+          <div class="form-group">
+            <label for="language-select">Language:</label>
+            <select id="language-select">
+              <option value="DE">German</option>
+              <option value="EN">English</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="refresh-interval">Refresh Interval (seconds):</label>
+            <input type="number" id="refresh-interval" min="5" max="60" step="5" value="15">
+          </div>
+          
+          <div class="form-group">
+            <label for="direction1-label">Direction 1 Label:</label>
+            <input type="text" id="direction1-label" placeholder="e.g., Outbound">
+          </div>
+          
+          <div class="form-group">
+            <label for="direction2-label">Direction 2 Label:</label>
+            <input type="text" id="direction2-label" placeholder="e.g., Inbound">
+          </div>
+          
+          <div class="form-group">
+            <label for="theme-select">Theme:</label>
+            <select id="theme-select">
+              <option value="default">Default</option>
+              <option value="dark">Dark</option>
+              <option value="light">Light</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      
+      <div class="settings-footer">
+        <button class="save-button">Save Settings</button>
+        <button class="cancel-button">Cancel</button>
+      </div>
+    </div>
+  </template>
+
+  <!-- Make sure these scripts are in the proper order -->
+  <script src="/js/settings.js"></script>
   <script src="/js/app.js"></script>
+  <script>
+    // Initialize settings button click handler
+    document.getElementById('settings-button').addEventListener('click', function() {
+      if (window.mvgSettings) {
+        window.mvgSettings.openSettings();
+      } else {
+        console.error("Settings module not loaded!");
+      }
+    });
+  </script>
 </body>
 </html>
