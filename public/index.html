@@ -16,6 +16,9 @@
     </div>
 
     <div class="departures-section">
+      <div id="departure-loading" class="departure-loading">
+        Loading departure data...
+      </div>
       <div class="departures-list" id="departures"></div>
     </div>
 
@@ -24,7 +27,7 @@
   <div class="settings-button" id="settings-button">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
       <path fill="none" d="M0 0h24v24H0z"/>
-      <path d="M12 1l9.5 5.5v11L12 23l-9.5-5.5v-11L12 1zm0 2.311L4.5 7.653v8.694l7.5 4.342 7.5-4.342V7.653L12 3.311zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm0-2a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"/>
+      <path d="M12 1l9.5 5.5v11L12 23l-9.5-5.5v-11L12 1zm0 2.311L4.5 7.653v8.694l7.5 4.342 7.5-4.342V7.653L12 3.311zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm0-2a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" fill="#333"/>
     </svg>
   </div>
 
@@ -33,13 +36,12 @@
     <div class="settings-modal">
       <div class="settings-header">
         <button class="close-button">&times;</button>
-        <h2>Display Settings</h2>
-        <button class="close-button">&times;</button>
+        <h2 class="centered-title" style="color: #333;">Display Settings</h2>
       </div>
       <div class="settings-tabs">
-        <button class="tab-button active" data-tab="station">Station</button>
-        <button class="tab-button" data-tab="filters">Filters</button>
-        <button class="tab-button" data-tab="display">Display</button>
+        <button class="tab-button active" data-tab="station" style="flex: 1;">Station</button>
+        <button class="tab-button" data-tab="filters" style="flex: 1;">Filters</button>
+        <button class="tab-button" data-tab="display" style="flex: 1;">Display</button>
       </div>
       
       <div class="settings-content">
@@ -65,35 +67,14 @@
           <div class="form-group">
             <label>Transport Types:</label>
             <div id="transport-types" class="checkbox-group">
-              <div class="checkbox-item" data-value="ubahn">
-                <input type="checkbox" id="type-ubahn">
-                <label for="type-ubahn">U-Bahn</label>
-              </div>
-              <div class="checkbox-item" data-value="sbahn">
-                <input type="checkbox" id="type-sbahn">
-                <label for="type-sbahn">S-Bahn</label>
-              </div>
-              <div class="checkbox-item" data-value="tram">
-                <input type="checkbox" id="type-tram">
-                <label for="type-tram">Tram</label>
-              </div>
-              <div class="checkbox-item" data-value="bus">
-                <input type="checkbox" id="type-bus">
-                <label for="type-bus">Bus</label>
-              </div>
+              <div class="checkbox-item" data-value="ubahn">U-Bahn</div>
+              <div class="checkbox-item" data-value="sbahn">S-Bahn</div>
+              <div class="checkbox-item" data-value="tram">Tram</div>
+              <div class="checkbox-item" data-value="bus">Bus</div>
             </div>
           </div>
 
           <!-- The Available Lines section will be inserted here dynamically -->
-
-          <div class="form-group">
-            <label for="line-filter">Custom Line Filters:</label>
-            <div class="line-filter-container">
-              <input type="text" id="line-filter-input" placeholder="Add a custom line number...">
-              <button id="add-line-filter">Add</button>
-            </div>
-            <div id="active-line-filters" class="line-filters"></div>
-          </div>
         </div>
 
         <!-- Display Tab -->
@@ -110,20 +91,16 @@
             <input type="number" id="refresh-interval" min="5" max="60" step="5" value="15">
           </div>
           <div class="form-group">
-            <label for="direction1-label">Direction 1 Label:</label>
-            <input type="text" id="direction1-label" placeholder="e.g., Outbound">
-          </div>
-          <div class="form-group">
-            <label for="direction2-label">Direction 2 Label:</label>
-            <input type="text" id="direction2-label" placeholder="e.g., Inbound">
-          </div>
-          <div class="form-group">
             <label for="theme-select">Theme:</label>
             <select id="theme-select">
               <option value="default">Default</option>
               <option value="dark">Dark</option>
               <option value="light">Light</option>
             </select>
+          </div>
+          <div class="form-group">
+            <label for="walk-offset">Walking Time (minutes):</label>
+            <input type="number" id="walk-offset" min="0" value="0">
           </div>
         </div>
       </div>
@@ -144,6 +121,32 @@
         window.mvgSettings.openSettings();
       } else {
         console.error("Settings module not loaded!");
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const departureLoadingEl = document.getElementById('departure-loading');
+      const departuresEl = document.getElementById('departures');
+      
+      if (departuresEl && departureLoadingEl) {
+        const messages = [
+          "Loading depature data",
+          "Loading depature data.",
+          "Loading depature data..",
+          "Loading depature data..."
+        ];
+        let idx = 0;
+        setInterval(() => {
+          departureLoadingEl.textContent = messages[idx];
+          idx = (idx + 1) % messages.length;
+        }, 600);
+
+        const observer = new MutationObserver(() => {
+          if (departuresEl.children.length > 0) {
+            departureLoadingEl.style.display = 'none';
+          }
+        });
+        observer.observe(departuresEl, { childList: true });
       }
     });
   </script>

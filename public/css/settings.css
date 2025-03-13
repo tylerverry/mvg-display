@@ -1,7 +1,8 @@
 /* Settings Button */
 .settings-button {
   position: fixed !important; 
-  top: 20px;
+  top: auto !important;
+  bottom: 20px;
   right: 20px;
   width: 40px;
   height: 40px;
@@ -26,7 +27,7 @@
 .settings-button svg {
   width: 24px;
   height: 24px;
-  fill: white;
+  fill: #333; /* Changed from white */
 }
 
 /* Modal container */
@@ -62,12 +63,23 @@
 /* Modal header */
 .settings-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: center; /* Center title horizontally */
   align-items: center;
+  position: relative; /* Allows close button to be absolute */
   margin-bottom: 20px;
-  background: #0072b5;
+  background: none; /* Removed #0072b5 background */
   border-radius: 12px;
   padding: 15px;
+}
+
+.centered-title {
+  margin: 0 auto;
+  text-align: center;
+  flex: 1;
+  font-size: 1.8rem;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: #333; /* Changed from white */
 }
 
 .settings-header h2 {
@@ -79,6 +91,10 @@
 }
 
 .close-button {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
   background: none;
   border: none;
   color: white;
@@ -89,6 +105,8 @@
 /* Tabs navigation */
 .settings-tabs {
   display: flex;
+  align-items: center; /* Center tabs vertically */
+  justify-content: center; /* Center tabs horizontally */
   border-bottom: 1px solid #e0e0e0;
   margin-bottom: 20px;
   overflow-x: auto;
@@ -113,6 +131,8 @@
   transition: all 0.3s ease;
   font-weight: 500;
   font-size: 1rem;
+  flex: 1; /* Each button takes up equal horizontal space */
+  text-align: center;
 }
 
 .tab-button.active {
@@ -176,6 +196,7 @@ select {
 .checkbox-item {
   display: flex;
   align-items: center;
+  justify-content: center; /* Center text horizontally */
   background: white;
   padding: 12px;
   border-radius: 8px;
@@ -192,6 +213,11 @@ select {
 
 .checkbox-item input {
   margin-right: 8px;
+  display: none; /* Ensure checkboxes/labels are removed from view */
+}
+
+.checkbox-item label {
+  display: none; /* Ensure checkboxes/labels are removed from view */
 }
 
 /* Footer buttons */
@@ -404,4 +430,26 @@ select {
 .toggle-switch label {
   margin-bottom: 0;
   cursor: pointer;
+}
+
+.departure-loading {
+  text-align: center;
+  font-size: 1.2rem;
+  margin-bottom: 1em;
+  color: #444;
+  /* animation: fadeBlink 1.2s infinite; */
+}
+
+/* 
+@keyframes fadeBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.2; }
+}
+*/
+
+/* Remove or disable any gray-out effect */
+.departures-section.loading,
+.departures-list.loading {
+  opacity: 1 !important;
+  pointer-events: auto !important;
 }

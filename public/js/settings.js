@@ -45,10 +45,7 @@ class MVGSettings {
         language: 'DE',
         theme: 'default',
         refreshInterval: 15,
-        directionLabels: {
-          direction1: 'Direction 1',
-          direction2: 'Direction 2'
-        }
+        walkOffset: 0
       }
     };
   }
@@ -57,7 +54,8 @@ class MVGSettings {
     console.log('Opening settings modal');
     
     if (this.modal) {
-      if (this.modalContainer) this.modalContainer.style.display = 'flex';
+      const isVisible = this.modalContainer && this.modalContainer.style.display === 'flex';
+      this.modalContainer.style.display = isVisible ? 'none' : 'flex';
       return;
     }
     
@@ -103,16 +101,15 @@ class MVGSettings {
     const modal = document.createElement('div');
     modal.className = 'settings-modal';
     modal.innerHTML = `
-      <div class="settings-header">
+      <div class="settings-header" style="color: inherit;">
         <h2>Display Settings</h2>
         <button class="close-button">&times;</button>
       </div>
       <div class="settings-content">
         <p>Settings interface will be available soon.</p>
-        <p class="current-station">Current station: ${this.config.station.name}</p>
+        <p class="current-station">${this.config.station.name}</p>
       </div>
       <div class="settings-footer">
-        <button class="cancel-button">Close</button>
       </div>
     `;
     
@@ -121,10 +118,6 @@ class MVGSettings {
     
     // Add event listeners
     modal.querySelector('.close-button').addEventListener('click', () => {
-      modal.style.display = 'none';
-    });
-    
-    modal.querySelector('.cancel-button').addEventListener('click', () => {
       modal.style.display = 'none';
     });
   }
@@ -219,16 +212,12 @@ class MVGSettings {
   setupTransportTypeHandlers() {
     const typeContainer = this.modal.querySelector('#transport-types');
     if (!typeContainer) return;
-    
+
     typeContainer.addEventListener('click', e => {
-      const checkboxItem = e.target.closest('.checkbox-item');
-      if (!checkboxItem) return;
-      
-      const checkbox = checkboxItem.querySelector('input');
-      if (checkbox) {
-        checkbox.checked = !checkbox.checked;
-        checkboxItem.classList.toggle('active', checkbox.checked);
-      }
+      const buttonItem = e.target.closest('.checkbox-item');
+      if (!buttonItem) return;
+      const isActive = buttonItem.classList.contains('active');
+      buttonItem.classList.toggle('active', !isActive);
     });
   }
   
@@ -270,20 +259,11 @@ class MVGSettings {
     const transportTypes = this.config.filters.transportTypes || [];
     this.modal.querySelectorAll('#transport-types .checkbox-item').forEach(item => {
       const type = item.dataset.value;
-      const checkbox = item.querySelector('input');
       
-      if (checkbox && transportTypes.includes(type)) {
-        checkbox.checked = true;
+      if (transportTypes.includes(type)) {
         item.classList.add('active');
       }
     });
-    
-    // Set direction labels
-    const dir1Label = this.modal.querySelector('#direction1-label');
-    const dir2Label = this.modal.querySelector('#direction2-label');
-    
-    if (dir1Label) dir1Label.value = this.config.display.directionLabels.direction1;
-    if (dir2Label) dir2Label.value = this.config.display.directionLabels.direction2;
     
     // Set other display options
     const langSelect = this.modal.querySelector('#language-select');
@@ -294,6 +274,11 @@ class MVGSettings {
     
     const themeSelect = this.modal.querySelector('#theme-select');
     if (themeSelect) themeSelect.value = this.config.display.theme;
+    
+    const walkOffsetInput = this.modal.querySelector('#walk-offset');
+    if (walkOffsetInput) {
+      walkOffsetInput.value = this.config.display.walkOffset;
+    }
     
     // Initialize line selections from config
     this.lineSelections = {};
@@ -310,25 +295,13 @@ class MVGSettings {
     
     // Transport types
     const transportTypes = [];
-    this.modal.querySelectorAll('#transport-types .checkbox-item input:checked').forEach(checkbox => {
-      const type = checkbox.closest('.checkbox-item').dataset.value;
+    this.modal.querySelectorAll('#transport-types .checkbox-item.active').forEach(item => {
+      const type = item.dataset.value;
       if (type) transportTypes.push(type);
     });
     
     if (transportTypes.length > 0) {
       this.config.filters.transportTypes = transportTypes;
-    }
-    
-    // Direction labels
-    const dir1Label = this.modal.querySelector('#direction1-label');
-    const dir2Label = this.modal.querySelector('#direction2-label');
-    
-    if (dir1Label && dir1Label.value) {
-      this.config.display.directionLabels.direction1 = dir1Label.value;
-    }
-    
-    if (dir2Label && dir2Label.value) {
-      this.config.display.directionLabels.direction2 = dir2Label.value;
     }
     
     // Other display settings
@@ -345,6 +318,11 @@ class MVGSettings {
     const themeSelect = this.modal.querySelector('#theme-select');
     if (themeSelect) {
       this.config.display.theme = themeSelect.value;
+    }
+    
+    const walkOffsetInput = this.modal.querySelector('#walk-offset');
+    if (walkOffsetInput) {
+      this.config.display.walkOffset = parseInt(walkOffsetInput.value) || 0;
     }
     
     // Before saving, update the line number filters from current selections
@@ -377,7 +355,7 @@ class MVGSettings {
       const stationId = this.config.station.id;
       
       // Use the debug endpoint to get raw data
-      const response = await fetch(`/api/debug/${stationId}`);
+      const response = await fetch(`/api/debug/${stationId}?offset=${this.config.display.walkOffset}`);
       if (!response.ok) throw new Error('Failed to fetch station data');
       
       const data = await response.json();
@@ -536,7 +514,7 @@ class MVGSettings {
       const stationId = this.config.station.id;
       
       // Use the debug endpoint to get raw data
-      const response = await fetch(`/api/debug/${stationId}`);
+      const response = await fetch(`/api/debug/${stationId}?offset=${this.config.display.walkOffset}`);
       if (!response.ok) throw new Error('Failed to fetch station data');
       
       const data = await response.json();

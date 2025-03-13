@@ -6,7 +6,8 @@ document.addEventListener('DOMContentLoaded', () => {
     display: { 
       language: 'DE',
       refreshInterval: 15,
-      directionLabels: { direction1: 'Direction 1', direction2: 'Direction 2' }
+      directionLabels: { direction1: 'Direction 1', direction2: 'Direction 2' },
+      walkOffset: 0
     }
   };
   
@@ -34,9 +35,10 @@ document.addEventListener('DOMContentLoaded', () => {
       stationId = newSettings.station.id;
       stationName = newSettings.station.name;
       updateStationName();
-      fetchDepartures(); // Refresh departures immediately
     }
-    // Direction labels removed – single feed used.
+    // Update settings object entirely
+    Object.assign(settings, newSettings);
+    fetchDepartures(); // Will use updated offset from settings
   });
   
   function updateStationName() {
@@ -47,8 +49,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // Track current departures to prevent unnecessary DOM updates
   let currentDepartures = [];
 
-  async function fetchDepartures() {
-    console.log(`Fetching departures for station ID: ${stationId}`);
+  async function fetchDepartures(offsetValue = settings.display.walkOffset) {
+    console.log(`Fetching departures for station ID: ${stationId} with offset: ${offsetValue} minutes`);
     try {
       // Instead of clearing immediately, just indicate loading state
       if (departuresContainer && !departuresContainer.querySelector('.placeholder')) {
@@ -59,7 +61,11 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       
       const transportTypes = settings.filters.transportTypes.join(',');
-      const url = `/api/departures/${stationId}?modes=${transportTypes}`;
+      const currentOffset = offsetValue || 0;
+      console.log('Current walk offset:', currentOffset, 'minutes');
+      
+      // Try with multiple parameter names to see if any work
+      const url = `/api/departures/${stationId}?modes=${transportTypes}&offset=${currentOffset}&offsetminutes=${currentOffset}&walkOffset=${currentOffset}`;
       console.log(`Fetching from URL: ${url}`);
       
       const response = await fetch(url);
@@ -69,6 +75,8 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       const data = await response.json();
       console.log('API response:', data);
+      console.log('First departure time:', data.departures && data.departures[0] ? data.departures[0].minutes : 'none');
+      console.log('Offset applied?', !data.departures?.some(d => d.minutes < currentOffset));
       
       const departures = (data && data.departures) ? 
         data.departures.map(dep => dep ? dep : null).filter(dep => dep !== null) : [];
@@ -243,7 +251,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   
   console.log('Initializing MVG Display app...');
+  // Remove currentOffset variable and use settings directly
   fetchDepartures();
-  setInterval(fetchDepartures, REFRESH_INTERVAL);
+  setInterval(() => fetchDepartures(), REFRESH_INTERVAL);
   setInterval(updateLastUpdated, 1000);
 });

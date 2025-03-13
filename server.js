@@ -55,11 +55,12 @@ app.get('/api/stations', (req, res) => {
 });
 
 // MVG API integration via Python bridge
-async function fetchMVGData(stationId) {
+async function fetchMVGData(stationId, offset = 0) {
   console.log(`[SERVER] Fetching MVG data for station ${stationId}`);
   
   return new Promise((resolve, reject) => {
     console.log(`[SERVER] Spawning Python bridge process`);
+    // Revert to the original parameter format that was working before
     const python = require('child_process').spawn('python3', [
       path.join(__dirname, 'utils', 'mvg_bridge.py'),
       stationId
@@ -103,6 +104,10 @@ app.get('/api/departures/:stationId', async (req, res) => {
     const { stationId } = req.params;
     const { modes = 'all' } = req.query;
     
+    // Get the offset parameter (for logging only)
+    const offset = parseInt(req.query.offset) || 0;
+    console.log(`[SERVER] Fetching MVG data for station ${stationId} with offset ${offset} minutes`);
+    
     // Check cache first
     const now = Date.now();
     const cached = departureCache[stationId];
@@ -113,7 +118,7 @@ app.get('/api/departures/:stationId', async (req, res) => {
       return res.json(filterByModes(cached.data, modes));
     }
     
-    // Fetch fresh data using Python bridge
+    // Get data without passing offset parameter
     const data = await fetchMVGData(stationId);
     
     // Transform departures so each departure gets a computed "minutes" property.
@@ -382,6 +387,9 @@ function groupDeparturesByDirection(departures, stationId) {
 app.get('/api/debug/:stationId', async (req, res) => {
   console.log(`[DEBUG ENDPOINT] Handling request for stationId: ${req.params.stationId}`);
   
+  // Get offset from query params
+  const offset = parseInt(req.query.offset) || 0;
+  
   // Force no caching & explicit content type
   res.set({
     'Content-Type': 'application/json',
@@ -391,8 +399,8 @@ app.get('/api/debug/:stationId', async (req, res) => {
   });
   
   try {
-    // Step 1: Get raw data from Python bridge
-    const rawData = await fetchMVGData(req.params.stationId);
+    // Step 1: Get raw data from Python bridge with offset
+    const rawData = await fetchMVGData(req.params.stationId, offset);
     console.log(`[DEBUG ENDPOINT] Fetched raw data: ${rawData.departures?.length || 0} departures`);
     
     // Step 2: Select first departure for detailed inspection
